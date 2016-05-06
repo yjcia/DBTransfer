@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!-- 自动扫描的包名 -->
+    <context:component-scan base-package="com.yanjun.dbtransfer.service"></context:component-scan>
+
+    <!-- 默认的注解映射的支持 -->
+    <mvc:annotation-driven />
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations" value="classpath:jdbc.properties" />
+    </bean>
+
+    <!-- dataSource -->
+    <bean id="dataSourceMysql" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${mysql.jdbc.url}"/>
+        <property name="username" value="${mysql.jdbc.user}"/>
+        <property name="password" value="${mysql.jdbc.password}"/>
+        <property name="poolPreparedStatements" value="false"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
+        <property name="filters" value="stat,log4j"/>
+    </bean>
+
+    <bean id="dataSourceOracle" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${oracle.jdbc.url}"/>
+        <property name="username" value="${oracle.jdbc.user}"/>
+        <property name="password" value="${oracle.jdbc.password}"/>
+        <property name="poolPreparedStatements" value="false"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
+        <property name="filters" value="stat,log4j"/>
+    </bean>
+
+    <bean id="dataSourceEntry" class="com.yanjun.dbtransfer.datasource.DBContextHolder"/>
+    <bean id="dynamicDataSource" class="com.yanjun.dbtransfer.datasource.DynamicDataSource" >
+        <!-- 通过key-value的形式来关联数据源 -->
+        <property name="targetDataSources">
+            <map>
+                <entry value-ref="dataSourceMysql" key="mysql"></entry>
+                <entry value-ref="dataSourceOracle" key="oracle"></entry>
+            </map>
+        </property>
+        <property name="defaultTargetDataSource" ref="dataSourceMysql" />
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource">
+            <ref bean="dynamicDataSource" />
+        </property>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dynamicDataSource" />
+    </bean>
+
+    <bean id="dataSourceAspect" class="com.yanjun.dbtransfer.aop.DataSourceAspect"/>
+
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="doDelete*" propagation="REQUIRED" />
+            <tx:method name="doSearch*" read-only="true" propagation="SUPPORTS" />
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="serviceMethods"
+                      expression="execution(* com.yanjun.dbtransfer.service.TransferDataByTableImpl.*(..))" />
+        <aop:advisor advice-ref="dataSourceAspect" pointcut-ref="serviceMethods" order="1"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods" order="2" />
+    </aop:config>
+</beans>
