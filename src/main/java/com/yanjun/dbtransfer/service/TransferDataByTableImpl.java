@@ -43,7 +43,7 @@ public class TransferDataByTableImpl implements TransferDataByTable {
                 String insertColumnStr = DBUtil.getInsertColumnStr(columnNameArr);
                 int[] insertColumnTypeArr = (int[]) dataMap.get(DBTransferAttribute.COLUMN_TYPE);
                 Object[] insertValues;
-                System.out.println(insertColumnStr);
+                //System.out.println(insertColumnStr);
                 List<Object> dataList = (List) dataMap.get(DBTransferAttribute.DATA_LIST);
                 for (Object cglibBeanObj : dataList) {
                     Map<String, Object> paramMap = new HashMap<String, Object>();
@@ -51,7 +51,7 @@ public class TransferDataByTableImpl implements TransferDataByTable {
                     for (Method method : cglibMethods) {
                         if (method.getName().startsWith("get")) {
                             Object methodReturnValue = method.invoke(cglibBeanObj, null);
-                            System.out.println(method.getName() + "-->" + methodReturnValue);
+                            //System.out.println(method.getName() + "-->" + methodReturnValue);
                             paramMap.put(DBUtil.getInsertColumnByMethod(method.getName()),methodReturnValue);
                         }
                     }
@@ -59,6 +59,9 @@ public class TransferDataByTableImpl implements TransferDataByTable {
                     String insertSql = "insert into " + toTableName + " ("
                             + insertColumnStr + " ) values ( " + DBUtil.getSqlParamSymbol(
                             Integer.parseInt(dataMap.get(DBTransferAttribute.COLUMN_COUNT).toString())) + " ) ";
+                    if(jdbcTemplate.getMaxRows() > 0){
+                        doDeleteAllFromTargetTable(toTableName);
+                    }
                     jdbcTemplate.update(insertSql, insertValues, insertColumnTypeArr);
                 }
 
@@ -72,9 +75,8 @@ public class TransferDataByTableImpl implements TransferDataByTable {
 
 
     public void doDeleteAllFromTargetTable(String tableName) {
-        String deleteSql = "delete from " + tableName;
-        jdbcTemplate.update(deleteSql);
+        String deleteSql = "delete from " + tableName ;
+        jdbcTemplate.execute(deleteSql);
     }
-
 
 }

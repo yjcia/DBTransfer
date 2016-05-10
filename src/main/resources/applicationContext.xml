@@ -32,7 +32,6 @@
         <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
         <property name="filters" value="stat,log4j"/>
     </bean>
-
     <bean id="dataSourceOracle" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
         <property name="url" value="${oracle.jdbc.url}"/>
         <property name="username" value="${oracle.jdbc.user}"/>
@@ -41,7 +40,6 @@
         <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
         <property name="filters" value="stat,log4j"/>
     </bean>
-
     <bean id="dataSourceEntry" class="com.yanjun.dbtransfer.datasource.DBContextHolder"/>
     <bean id="dynamicDataSource" class="com.yanjun.dbtransfer.datasource.DynamicDataSource" >
         <!-- 通过key-value的形式来关联数据源 -->
@@ -53,17 +51,15 @@
         </property>
         <property name="defaultTargetDataSource" ref="dataSourceMysql" />
     </bean>
-
     <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
         <property name="dataSource">
             <ref bean="dynamicDataSource" />
         </property>
     </bean>
-
     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dynamicDataSource" />
     </bean>
-
+    <bean id="transferDataByTable" class="com.yanjun.dbtransfer.service.TransferDataByTableImpl"/>
     <bean id="dataSourceAspect" class="com.yanjun.dbtransfer.aop.DataSourceAspect"/>
 
     <tx:advice id="txAdvice" transaction-manager="transactionManager">
@@ -72,7 +68,6 @@
             <tx:method name="doSearch*" read-only="true" propagation="SUPPORTS" />
         </tx:attributes>
     </tx:advice>
-
     <aop:config>
         <aop:pointcut id="serviceMethods"
                       expression="execution(* com.yanjun.dbtransfer.service.TransferDataByTableImpl.*(..))" />
