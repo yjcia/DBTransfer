@@ -10,9 +10,13 @@ import java.util.Map;
  */
 public class Start {
     public static void main(String args[]){
+        String tableStrs = args[0];
+        String[] tables = tableStrs.split(",");
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
         TransferDataByTable transferDataByTable = (TransferDataByTable)context.getBean("transferDataByTable");
-        Map<String, Object> returnMap = transferDataByTable.doSearchFromSourceTable("t_user");
-        transferDataByTable.doInsertToTargetTable(returnMap, "t_user");
+        for(String tableName:tables){
+            Map<String, Object> returnMap = transferDataByTable.doSearchFromSourceTable(tableName);
+            transferDataByTable.doInsertToTargetTable(returnMap, tableName);
+        }
     }
 }
