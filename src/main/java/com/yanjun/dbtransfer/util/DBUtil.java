@@ -81,7 +81,7 @@ public class DBUtil {
     public static String getInsertColumnStr(String[] columnNames){
         StringBuilder columnNameStr = new StringBuilder();
         for(String columnName:columnNames){
-            columnNameStr.append(columnName+",");
+            columnNameStr.append("\""+columnName+"\",");
         }
         return columnNameStr.substring(0,columnNameStr.length()-1);
     }

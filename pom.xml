@@ -155,7 +155,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
+                            <classpathPrefix>lib\</classpathPrefix>
                             <mainClass>com.yanjun.dbtransfer.main.Start</mainClass>
                         </manifest>
                     </archive>
@@ -172,9 +172,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <outputDirectory>${project.build.directory}/../run/lib</outputDirectory>
+                    <outputDirectory>${project.build.directory}/../run/lib/</outputDirectory>
                     <excludeTransitive>false</excludeTransitive>
-                    <stripVersion>true</stripVersion>
+                    <stripVersion>false</stripVersion>
                 </configuration>
             </plugin>
             <plugin>
