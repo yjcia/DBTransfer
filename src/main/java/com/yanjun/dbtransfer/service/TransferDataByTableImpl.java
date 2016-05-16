@@ -42,7 +42,7 @@ public class TransferDataByTableImpl implements TransferDataByTable {
                 int[] insertColumnTypeArr = (int[]) dataMap.get(DBTransferAttribute.COLUMN_TYPE);
                 if(!DBUtil.getTableName(jdbcTemplate,toTableName)
                         && Boolean.parseBoolean(PropertiesUtil.getValue(DBTransferAttribute.NEED_CREATE_TABLE))){
-                    doCreateTargetTable(columnNameArr,insertColumnTypeArr,toTableName);
+                    doCreateTargetTable(toTableName);
                 }
                 doDeleteAllFromTargetTable(toTableName);
                 String insertColumnStr = DBUtil.getInsertColumnStr(columnNameArr);
@@ -78,11 +78,11 @@ public class TransferDataByTableImpl implements TransferDataByTable {
         }
     }
 
-    private void doCreateTargetTable(String[] columnNameArr, int[] insertColumnTypeArr,String tableName) {
-
-        String createTableSqlStr = DBUtil.genCreateTable(columnNameArr,insertColumnTypeArr,tableName);
+    private void doCreateTargetTable(String tableName) {
+        String createTableSqlStr = DBUtil.genCreateTable(jdbcTemplate,tableName);
+        DBContextHolder.clearDBType();
+        DBContextHolder.setDBType(DBTransferAttribute.DATA_SOURCE_ORACLE);
         jdbcTemplate.update(createTableSqlStr);
-
     }
 
 

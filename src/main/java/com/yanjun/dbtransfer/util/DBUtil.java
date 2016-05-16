@@ -1,15 +1,13 @@
 package com.yanjun.dbtransfer.util;
 
 import com.yanjun.dbtransfer.common.DBTransferAttribute;
+import com.yanjun.dbtransfer.datasource.DBContextHolder;
 import com.yanjun.dbtransfer.model.CglibBean;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCountCallbackHandler;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.Types;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,11 +85,11 @@ public class DBUtil {
         } else if (sqlType == Types.FLOAT) {
             return "float";
         } else if (sqlType == Types.DECIMAL) {
-            return "decimal(10,4)";
+            return "decimal";
         } else if (sqlType == Types.NUMERIC) {
             return "numeric";
         } else if (sqlType == Types.VARCHAR) {
-            return "varchar(255)";
+            return "varchar";
         } else if (sqlType == Types.CHAR) {
             return "char";
         } else if (sqlType == Types.NVARCHAR) {
@@ -134,17 +132,54 @@ public class DBUtil {
         return dataObjArr;
     }
 
-    public static String genCreateTable(String[] columnNameArr,
-                                               int[] insertColumnTypeArr, String tableName) {
+    public static String genCreateTable(JdbcTemplate jdbcTemplate, String tableName) {
+        DBContextHolder.clearDBType();
+        DBContextHolder.setDBType(DBTransferAttribute.DATA_SOURCE_MYSQL);
         StringBuilder createTableSqlStr = new StringBuilder();
-        createTableSqlStr.append("create table " + tableName + " ( ");
-        for(int i=0;i<insertColumnTypeArr.length;i++){
-            String sqlTypeStr = sqlType2SqlTypeStr(insertColumnTypeArr[i]);
-            createTableSqlStr.append("\""+columnNameArr[i]).append("\" ").append(sqlTypeStr).append(",");
+        String sql = "select * from " + tableName;
+        String sqlStr = null;
+        Connection conn = null;
+        ResultSet rs = null;
+        try {
+            conn = jdbcTemplate.getDataSource().getConnection();
+            rs = conn.createStatement().executeQuery(sql);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            createTableSqlStr.append("create table " + tableName + " ( ");
+            for(int i=1;i<=columnCount;i++){
+                String columnName = metaData.getColumnName(i);
+                String columnTypeName = metaData.getColumnTypeName(i);
+                int columnTypeSize = metaData.getColumnDisplaySize(i);
+                int precision = metaData.getPrecision(i);
+                if(columnTypeName.equals("DECIMAL")){
+                    createTableSqlStr.append("\""+columnName + "\" " +
+                            columnTypeName + "(" + columnTypeSize +","+ (columnTypeSize-precision) +"),");
+                }else if(columnTypeName.equals("INT")){
+                    createTableSqlStr.append("\""+columnName + "\" " + columnTypeName + ",");
+                }else{
+                    createTableSqlStr.append("\""+columnName + "\" " + columnTypeName + "(" + columnTypeSize +"),");
+                }
+            }
+            sqlStr = createTableSqlStr.substring(0,createTableSqlStr.lastIndexOf(","));
+            sqlStr += ")";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            if(rs != null){
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(conn != null){
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        String sqlStr = createTableSqlStr.substring(0,createTableSqlStr.lastIndexOf(","));
-        sqlStr += ")";
-
         return sqlStr;
     }
 
@@ -154,7 +189,7 @@ public class DBUtil {
         try {
             DatabaseMetaData dbMetaData = conn.getMetaData();
             String[] types = { "TABLE" };
-            tabs = dbMetaData.getTables(null, null, tableName, types);
+            tabs = dbMetaData.getTables(null, null, tableName.toUpperCase(), types);
             if (tabs.next()) {
                 return true;
             }
