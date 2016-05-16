@@ -49,7 +49,7 @@ public class DBtransferTest {
                 String columnType = metaData.getColumnTypeName(i);
                 int columnTypeSize = metaData.getColumnDisplaySize(i);
                 int precision = metaData.getPrecision(i);
-                System.out.println(columnName + "--" + columnType + "--" + columnTypeSize + "--" + precision);
+                //System.out.println(columnName + "--" + columnType + "--" + columnTypeSize + "--" + precision);
             }
 
         } catch (Exception e) {
