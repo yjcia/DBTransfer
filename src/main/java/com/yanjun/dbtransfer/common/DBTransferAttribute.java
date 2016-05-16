@@ -14,4 +14,5 @@ public class DBTransferAttribute {
     public static final String COLUMN_TYPE = "columnType";
     public static final String DATA_LIST = "dataList";
     public static final String CGLIB_BEAN_NAME = "beanName";
+    public static final String NEED_CREATE_TABLE = "createtable";
 }

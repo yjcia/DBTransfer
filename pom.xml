@@ -178,21 +178,21 @@
                 </configuration>
             </plugin>
             <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-                <execution>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>run</goal>
-                    </goals>
-                    <configuration>
-                        <tasks>
-                            <copy file="${project.build.directory}/com.yanjun.dbtransfer-1.0-SNAPSHOT.jar"
-                                  tofile="${project.build.directory}/../run/dbTransfer.jar"/>
-                        </tasks>
-                    </configuration>
-                </execution>
-            </executions>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <copy file="${project.build.directory}/com.yanjun.dbtransfer-1.0-SNAPSHOT.jar"
+                                      tofile="${project.build.directory}/../run/dbTransfer.jar"/>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
         </plugin>
     </plugins>
     </build>

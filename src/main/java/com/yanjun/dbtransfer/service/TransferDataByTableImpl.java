@@ -38,10 +38,14 @@ public class TransferDataByTableImpl implements TransferDataByTable {
         try {
             if (PropertiesUtil.getValue(DBTransferAttribute.TRANSFER_MODE).
                     equals(DBTransferAttribute.TRANSFER_MODE_FULL)) {
-                doDeleteAllFromTargetTable(toTableName);
                 String[] columnNameArr = (String[]) dataMap.get(DBTransferAttribute.COLUMN_NAME);
-                String insertColumnStr = DBUtil.getInsertColumnStr(columnNameArr);
                 int[] insertColumnTypeArr = (int[]) dataMap.get(DBTransferAttribute.COLUMN_TYPE);
+                if(!DBUtil.getTableName(jdbcTemplate,toTableName)
+                        && Boolean.parseBoolean(PropertiesUtil.getValue(DBTransferAttribute.NEED_CREATE_TABLE))){
+                    doCreateTargetTable(columnNameArr,insertColumnTypeArr,toTableName);
+                }
+                doDeleteAllFromTargetTable(toTableName);
+                String insertColumnStr = DBUtil.getInsertColumnStr(columnNameArr);
                 Object[] insertValues;
                 //System.out.println(insertColumnStr);
                 List<Object> dataList = (List) dataMap.get(DBTransferAttribute.DATA_LIST);
@@ -51,7 +55,6 @@ public class TransferDataByTableImpl implements TransferDataByTable {
                     for (Method method : cglibMethods) {
                         if (method.getName().startsWith("get")) {
                             Object methodReturnValue = method.invoke(cglibBeanObj, null);
-                            //System.out.println(method.getName() + "-->" + methodReturnValue);
                             paramMap.put(DBUtil.getInsertColumnByMethod(method.getName()),methodReturnValue);
                         }
                     }
@@ -70,7 +73,16 @@ public class TransferDataByTableImpl implements TransferDataByTable {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    private void doCreateTargetTable(String[] columnNameArr, int[] insertColumnTypeArr,String tableName) {
+
+        String createTableSqlStr = DBUtil.genCreateTable(columnNameArr,insertColumnTypeArr,tableName);
+        jdbcTemplate.update(createTableSqlStr);
+
     }
 
 

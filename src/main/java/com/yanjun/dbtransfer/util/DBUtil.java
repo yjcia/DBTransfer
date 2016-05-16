@@ -6,6 +6,9 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCountCallbackHandler;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +73,38 @@ public class DBUtil {
         return null;
     }
 
+    public static String sqlType2SqlTypeStr(int sqlType) {
+        if (sqlType == Types.BIT) {
+            return "bit";
+        } else if (sqlType == Types.TINYINT) {
+            return "tinyint";
+        } else if (sqlType == Types.SMALLINT) {
+            return "smallint";
+        } else if (sqlType == Types.INTEGER) {
+            return "int";
+        } else if (sqlType == Types.BIGINT) {
+            return "bigint";
+        } else if (sqlType == Types.FLOAT) {
+            return "float";
+        } else if (sqlType == Types.DECIMAL) {
+            return "decimal(10,4)";
+        } else if (sqlType == Types.NUMERIC) {
+            return "numeric";
+        } else if (sqlType == Types.VARCHAR) {
+            return "varchar(255)";
+        } else if (sqlType == Types.CHAR) {
+            return "char";
+        } else if (sqlType == Types.NVARCHAR) {
+            return "nvarchar";
+        } else if (sqlType == Types.NCHAR) {
+            return "nchar";
+        } else if (sqlType == Types.TIMESTAMP) {
+            return "timestamp";
+
+        }
+        return null;
+    }
+
     public static String getSqlParamSymbol(int columnCount){
         StringBuilder symbol = new StringBuilder();
         for(int i =0;i<columnCount;i++){
@@ -99,4 +134,36 @@ public class DBUtil {
         return dataObjArr;
     }
 
+    public static String genCreateTable(String[] columnNameArr,
+                                               int[] insertColumnTypeArr, String tableName) {
+        StringBuilder createTableSqlStr = new StringBuilder();
+        createTableSqlStr.append("create table " + tableName + " ( ");
+        for(int i=0;i<insertColumnTypeArr.length;i++){
+            String sqlTypeStr = sqlType2SqlTypeStr(insertColumnTypeArr[i]);
+            createTableSqlStr.append("\""+columnNameArr[i]).append("\" ").append(sqlTypeStr).append(",");
+        }
+        String sqlStr = createTableSqlStr.substring(0,createTableSqlStr.lastIndexOf(","));
+        sqlStr += ")";
+
+        return sqlStr;
+    }
+
+    public static boolean getTableName(JdbcTemplate jdbcTemplate,String tableName) throws Exception {
+        Connection conn = jdbcTemplate.getDataSource().getConnection();
+        ResultSet tabs = null;
+        try {
+            DatabaseMetaData dbMetaData = conn.getMetaData();
+            String[] types = { "TABLE" };
+            tabs = dbMetaData.getTables(null, null, tableName, types);
+            if (tabs.next()) {
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            tabs.close();
+            conn.close();
+        }
+        return false;
+    }
 }
